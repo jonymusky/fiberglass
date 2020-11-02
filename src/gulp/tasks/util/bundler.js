@@ -4,15 +4,14 @@ var fs = require('fs');
 var _ = require('underscore.string');
 var browserify = require('browserify');
 var watchify = require('watchify');
-var minifyify = require('minifyify');
 var mold = require('mold-source-map');
 var vinylSource = require('vinyl-source-stream');
 var vinylBuffer = require('vinyl-buffer');
 var buildDir = './public/build';
 var watchBundles = false;
 // this modules (transforms or plugins) will only be enabled when watching
-var watchOnlyModules = [ 'errorify' ];
-function isWatching(){
+var watchOnlyModules = ['errorify'];
+function isWatching() {
   return watchBundles;
 }
 
@@ -54,7 +53,7 @@ var allTasks = [];
 var allWatchTasks = [];
 
 function moldTransformSourcesRelativeToAndPrepend(root, prefix) {
-  return mold.transformSources(function map(file){
+  return mold.transformSources(function map(file) {
     return prefix + path.relative(root, file);
   });
 }
@@ -100,6 +99,7 @@ function bundle(gulp, plugins, options) {
         browserifyOptions.cache = {};
         browserifyOptions.packageCache = {};
         browserifyOptions.fullPaths = true;
+        delete browserifyOptions.plugin;
       }
       var bundler = browserify(browserifyOptions);
       var fullname = name + (min ? '.min' : '');
@@ -115,14 +115,12 @@ function bundle(gulp, plugins, options) {
         };
 
         stream = stream
-        .pipe(vinylSource(fullname + '.js'))
-        .pipe(vinylBuffer())
-
-        .pipe(plugins.replace('{{package-version}}', packageInfo.version, replaceOptions))
-        .pipe(plugins.replace('{{package-homepage}}', packageInfo.homepage, replaceOptions))
-        .pipe(plugins.replace('{{git-version}}', getGitVersion, replaceOptions))
-
-        .pipe(gulp.dest(buildDir));
+          .pipe(vinylSource(fullname + '.js'))
+          .pipe(vinylBuffer())
+          .pipe(plugins.replace('{{package-version}}', packageInfo.version, replaceOptions))
+          .pipe(plugins.replace('{{package-homepage}}', packageInfo.homepage, replaceOptions))
+          .pipe(plugins.replace('{{git-version}}', getGitVersion, replaceOptions))
+          .pipe(gulp.dest(buildDir));
         return stream;
       }
 
@@ -147,20 +145,21 @@ function bundle(gulp, plugins, options) {
       bundler.add(src);
       if (min) {
         var uglifyOptions = {
+          minify: !!min,
           compress: {
-            angular: bundleHasAngular(src, options)
+            angular: !!min && bundleHasAngular(src, options)
           }
         };
-        bundler.plugin(minifyify, {
+        bundler.plugin('minifyify', {
           map: fullname + '.map',
           uglify: uglifyOptions,
+          minify: !!min,
           output: path.join(buildDir, fullname + '.map'),
-          compressPath: function (p) {
+          compressPath: function(p) {
             return '/source-files/' + packageInfo.name + '/' + path.relative('.', p);
           }
         });
       }
-
       return createBundle();
     }
 
@@ -185,7 +184,7 @@ function bundle(gulp, plugins, options) {
   if (bundleDependencies.indexOf('clean') < 0) {
     bundleDependencies.push('clean');
   }
-  console.log('task',taskName, bundleDependencies);
+  console.log('task', taskName, bundleDependencies);
   gulp.task(taskName, bundleDependencies, bundleTask);
   gulp.task(taskName + '-watch', bundleDependencies, function(callback) {
     watchBundles = true;
@@ -218,7 +217,6 @@ function auto(loader) {
   browserifyOptions.name = packageInfo.name;
   browserifyOptions.standalone = _.camelize(packageInfo.name);
   browserifyOptions.transform = browserifyOptions.transform || browserifyModules.transform;
-  browserifyOptions.plugin = browserifyOptions.plugin || browserifyModules.plugin;
 
   // main bundle
   bundle(gulp, plugins, {
@@ -282,7 +280,7 @@ function auto(loader) {
     watchTasks.push('copy-test-resources');
   }
 
-  if (fs.existsSync(path.join(loader.projectRoot, 'bower.json' ))) {
+  if (fs.existsSync(path.join(loader.projectRoot, 'bower.json'))) {
     gulp.task('copy-bower-json', ['clean'], function() {
       gulp.src('bower.json')
         .pipe(plugins.replace(/public\/build\//g, ''))
