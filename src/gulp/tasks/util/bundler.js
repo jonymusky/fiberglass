@@ -96,11 +96,9 @@ function bundle(gulp, plugins, options) {
 
     function bundlify(min) {
       delete browserifyOptions.plugin;
-      if (watchBundles) {
-        browserifyOptions.cache = {};
-        browserifyOptions.packageCache = {};
-        browserifyOptions.fullPaths = true;
-      }
+      browserifyOptions.cache = {};
+      browserifyOptions.packageCache = {};
+      browserifyOptions.fullPaths = true;
       var bundler = browserify(browserifyOptions);
       var fullname = name + (min ? '.min' : '');
 
