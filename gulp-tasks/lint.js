@@ -1,5 +1,5 @@
 
-var gulp = require('gulp');
+var gulp = require('gulp-v3');
 var plugins = require('gulp-load-plugins')();
 var plumber = require('./util/plumber').plumber;
 
