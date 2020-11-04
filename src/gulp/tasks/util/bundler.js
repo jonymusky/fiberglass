@@ -95,12 +95,10 @@ function bundle(gulp, plugins, options) {
     browserifyOptions.debug = true;
 
     function bundlify(min) {
-      if (watchBundles) {
-        browserifyOptions.cache = {};
-        browserifyOptions.packageCache = {};
-        browserifyOptions.fullPaths = true;
-        delete browserifyOptions.plugin;
-      }
+      delete browserifyOptions.plugin;
+      browserifyOptions.cache = {};
+      browserifyOptions.packageCache = {};
+      browserifyOptions.fullPaths = true;
       var bundler = browserify(browserifyOptions);
       var fullname = name + (min ? '.min' : '');
 
@@ -145,15 +143,15 @@ function bundle(gulp, plugins, options) {
       bundler.add(src);
       if (min) {
         var uglifyOptions = {
-          minify: !!min,
+          minify: true,
           compress: {
-            angular: !!min && bundleHasAngular(src, options)
+            angular: bundleHasAngular(src, options)
           }
         };
         bundler.plugin('minifyify', {
           map: fullname + '.map',
           uglify: uglifyOptions,
-          minify: !!min,
+          minify: true,
           output: path.join(buildDir, fullname + '.map'),
           compressPath: function(p) {
             return '/source-files/' + packageInfo.name + '/' + path.relative('.', p);
